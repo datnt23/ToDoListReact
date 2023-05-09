@@ -1,19 +1,17 @@
 import { useState, useEffect } from "react";
+import { Timer, SumTimer } from "./components/Timer";
 import "./App.css";
 let id = 0;
 function App() {
 	const [toDo, setToDo] = useState("");
 	const [timing, setTiming] = useState();
 	const [array, setArray] = useState([]);
+	const [sum, setSum] = useState(0);
 	useEffect(() => {
 		localStorage.setItem("arr", JSON.stringify(array));
 	}, [array]);
 	function handleClickAdd() {
-		const [hours, minutes] = timing.split(":");
-		let date = new Date();
-		date.setHours(hours);
-		date.setMinutes(minutes);
-		let timeDone = new Date(date);
+		let timeDone = new Date(timing);
 		if (toDo === "") {
 			alert("Enter your to do something!");
 		} else if (timing === "" || timeDone.getTime() < new Date().getTime()) {
@@ -30,12 +28,29 @@ function App() {
 				},
 			]);
 			setToDo("");
+			setTiming("");
+			let time = timeDone.getTime() - new Date().getTime();
+			setSum((prev) => {
+				return (prev += time);
+			});
 		}
+	}
+	function handleCheckSpan(id) {
+		setArray(
+			array.map((check) => {
+				if (check.id === id) {
+					console.log(check.check);
+					check.check = true;
+				}
+				return check;
+			})
+		);
 	}
 	function handleChecked(id) {
 		setArray(
 			array.map((check) => {
 				if (check.id === id) {
+					console.log(check.check);
 					check.check = event.target.checked;
 				}
 				return check;
@@ -44,12 +59,17 @@ function App() {
 	}
 	const handleDelete = (arr) => {
 		setArray(array.filter((del) => del.id !== arr.id));
+		let time = arr.timing.getTime() - arr.time.getTime();
+		setSum((prev) => {
+			return (prev -= time);
+		});
 	};
 	function handleDeleteCheck() {
 		setArray(array.filter((arr) => arr.check !== true));
 	}
 	function handleDeleteAll() {
 		setArray([]);
+		setSum(0);
 	}
 	return (
 		<div>
@@ -65,8 +85,8 @@ function App() {
 				/>
 				<input
 					value={timing}
-					type="time"
-					placeholder="Time"
+					step={2}
+					type="datetime-local"
 					onChange={(e) => {
 						setTiming(e.target.value);
 					}}
@@ -85,7 +105,7 @@ function App() {
 								<li key={arr.id}>
 									<input
 										type="checkbox"
-										onChange={() => handleChecked(arr.id)}
+										onClick={() => handleChecked(arr.id)}
 									/>
 									<span
 										style={{
@@ -101,7 +121,7 @@ function App() {
 										}}
 									>
 										{" "}
-										from {arr.time.toLocaleTimeString()}{" "}
+										from {arr.time.toLocaleString()}{" "}
 									</span>
 									<span
 										style={{
@@ -109,14 +129,21 @@ function App() {
 										}}
 									>
 										{" "}
-										to {arr.timing.toLocaleTimeString()}{" "}
+										to {arr.timing.toLocaleString()}{" "}
 									</span>
 									<button type="button" onClick={() => handleDelete(arr)}>
 										Delete
 									</button>
+									<Timer
+										onClick={() => handleCheckSpan(arr.id)}
+										dateComplete={arr.timing}
+									/>
 								</li>
 						  ))}
 				</ul>
+			</div>
+			<div>
+				<SumTimer sumCountDown={sum} />
 			</div>
 		</div>
 	);
