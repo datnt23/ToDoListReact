@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
-import { Timer, SumTimer } from "./components/Timer";
+import { useState, useEffect, Children, useRef, useCallback } from "react";
+import Timer from "./components/Timer";
+import SumTimer from "./components/sumTimer";
+
 import "./App.css";
-let id = 0;
 function App() {
 	const [toDo, setToDo] = useState("");
 	const [timing, setTiming] = useState();
 	const [array, setArray] = useState([]);
 	const [sum, setSum] = useState(0);
+	const id = useRef(0);
 	useEffect(() => {
 		localStorage.setItem("arr", JSON.stringify(array));
 	}, [array]);
@@ -20,9 +22,9 @@ function App() {
 			setArray([
 				...array,
 				{
-					id: id++,
+					id: id.current++,
 					check: false,
-					doing: toDo,
+					toDo,
 					time: new Date(),
 					timing: timeDone,
 				},
@@ -35,22 +37,20 @@ function App() {
 			});
 		}
 	}
-	function handleCheckSpan(id) {
+	const handleCheckSpan = useCallback((id) => {
 		setArray(
 			array.map((check) => {
 				if (check.id === id) {
-					console.log(check.check);
 					check.check = true;
 				}
 				return check;
 			})
 		);
-	}
+	});
 	function handleChecked(id) {
 		setArray(
 			array.map((check) => {
 				if (check.id === id) {
-					console.log(check.check);
 					check.check = event.target.checked;
 				}
 				return check;
@@ -113,7 +113,7 @@ function App() {
 										}}
 									>
 										{" "}
-										Do: {arr.doing}{" "}
+										Do: {arr.toDo}{" "}
 									</span>
 									<span
 										style={{
@@ -143,7 +143,7 @@ function App() {
 				</ul>
 			</div>
 			<div>
-				<SumTimer sumCountDown={sum} />
+				<SumTimer sumCountDown={sum}></SumTimer>
 			</div>
 		</div>
 	);

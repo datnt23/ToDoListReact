@@ -8,6 +8,7 @@ const useCountDown = (dateComplete) => {
 		const interval = setInterval(() => {
 			setCountDown(countDownDateComplete - new Date().getTime());
 		}, 1000);
+
 		return () => {
 			clearInterval(interval);
 		};
