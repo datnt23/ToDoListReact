@@ -1,149 +1,56 @@
-import { useState, useEffect, Children, useRef, useCallback } from "react";
-import Timer from "./components/Timer";
-import SumTimer from "./components/sumTimer";
-
+import { useStore, actions } from "./store";
+import { useEffect, useRef } from "react";
 import "./App.css";
+import { checkedToDo, deleteToDo } from "./store/actions";
 function App() {
-	const [toDo, setToDo] = useState("");
-	const [timing, setTiming] = useState();
-	const [array, setArray] = useState([]);
-	const [sum, setSum] = useState(0);
-	const id = useRef(0);
+	const [state, dispatch] = useStore();
+	const { arrayToDo, toDo } = state;
+	const inputRef = useRef();
 	useEffect(() => {
-		localStorage.setItem("arr", JSON.stringify(array));
-	}, [array]);
-	function handleClickAdd() {
-		let timeDone = new Date(timing);
-		if (toDo === "") {
-			alert("Enter your to do something!");
-		} else if (timing === "" || timeDone.getTime() < new Date().getTime()) {
-			alert("Enter your time to done!");
-		} else {
-			setArray([
-				...array,
-				{
-					id: id.current++,
-					check: false,
-					toDo,
-					time: new Date(),
-					timing: timeDone,
-				},
-			]);
-			setToDo("");
-			setTiming("");
-			let time = timeDone.getTime() - new Date().getTime();
-			setSum((prev) => {
-				return (prev += time);
-			});
-		}
-	}
-	const handleCheckSpan = useCallback((id) => {
-		setArray(
-			array.map((check) => {
-				if (check.id === id) {
-					check.check = true;
-				}
-				return check;
-			})
-		);
-	});
-	function handleChecked(id) {
-		setArray(
-			array.map((check) => {
-				if (check.id === id) {
-					check.check = event.target.checked;
-				}
-				return check;
-			})
-		);
-	}
-	const handleDelete = (arr) => {
-		setArray(array.filter((del) => del.id !== arr.id));
-		let time = arr.timing.getTime() - arr.time.getTime();
-		setSum((prev) => {
-			return (prev -= time);
-		});
+		localStorage.setItem("arrayToDo", JSON.stringify(arrayToDo));
+	}, [arrayToDo]);
+	const handleAdd = () => {
+		dispatch(actions.addToDo(toDo));
+		dispatch(actions.setToDo(""));
+		inputRef.current.focus();
 	};
-	function handleDeleteCheck() {
-		setArray(array.filter((arr) => arr.check !== true));
-	}
-	function handleDeleteAll() {
-		setArray([]);
-		setSum(0);
-	}
+	const handleDeleteAllToDo = () => {
+		dispatch(actions.deleteAllToDo());
+	};
 	return (
 		<div>
 			<h1>To Do List Something...</h1>
 			<div>
 				<input
+					ref={inputRef}
 					value={toDo}
-					placeholder="Do something..."
 					type="text"
-					onChange={(e) => {
-						setToDo(e.target.value);
+					placeholder="Enter your to do..."
+					onChange={(todo) => {
+						dispatch(actions.setToDo(todo.target.value));
 					}}
 				/>
-				<input
-					value={timing}
-					step={2}
-					type="datetime-local"
-					onChange={(e) => {
-						setTiming(e.target.value);
-					}}
-				/>
-				<button type="button" onClick={handleClickAdd}>
-					Add
-				</button>
-				<button onClick={handleDeleteCheck}>Delete Check Done</button>
-				<button onClick={handleDeleteAll}>Delete All</button>
+				<button onClick={handleAdd}>Add</button>
+				<button>Delete All Checked</button>
+				<button onClick={handleDeleteAllToDo}>Delete All To Do</button>
 			</div>
 			<div>
 				<ul>
-					{!array.length
-						? "Don't have To Do"
-						: array.map((arr) => (
-								<li key={arr.id}>
+					{!arrayToDo.length
+						? "Don't Have To Do Something!"
+						: arrayToDo.map((toDos, index) => (
+								<li key={index}>
 									<input
 										type="checkbox"
-										onClick={() => handleChecked(arr.id)}
+										onClick={() => dispatch(checkedToDo(index))}
 									/>
-									<span
-										style={{
-											textDecoration: arr.check ? "line-through" : "none",
-										}}
-									>
-										{" "}
-										Do: {arr.toDo}{" "}
-									</span>
-									<span
-										style={{
-											textDecoration: arr.check ? "line-through" : "none",
-										}}
-									>
-										{" "}
-										from {arr.time.toLocaleString()}{" "}
-									</span>
-									<span
-										style={{
-											textDecoration: arr.check ? "line-through" : "none",
-										}}
-									>
-										{" "}
-										to {arr.timing.toLocaleString()}{" "}
-									</span>
-									<button type="button" onClick={() => handleDelete(arr)}>
+									<span> {toDos} </span>
+									<button onClick={() => dispatch(deleteToDo(index))}>
 										Delete
 									</button>
-									<Timer
-										onClick={() => handleCheckSpan(arr.id)}
-										dateComplete={arr.timing}
-									/>
 								</li>
 						  ))}
 				</ul>
-			</div>
-			<div>
-				<SumTimer sumCountDown={sum}></SumTimer>
 			</div>
 		</div>
 	);
