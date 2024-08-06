@@ -4,9 +4,9 @@ import App from "./App.jsx";
 import { StoreProvider } from "./store";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-	<React.StrictMode>
-		<StoreProvider>
-			<App />
-		</StoreProvider>
-	</React.StrictMode>
+  <React.StrictMode>
+    <StoreProvider>
+      <App />
+    </StoreProvider>
+  </React.StrictMode>
 );
